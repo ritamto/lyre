@@ -225,6 +225,15 @@
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   }
 
+  function pixelPolygon(points, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(Math.round(points[0][0]), Math.round(points[0][1]));
+    for (const [x, y] of points.slice(1)) ctx.lineTo(Math.round(x), Math.round(y));
+    ctx.closePath();
+    ctx.fill();
+  }
+
   function drawBackdrop() {
     const sky = ctx.createLinearGradient(0, 0, 0, H);
     sky.addColorStop(0, "#494280");
@@ -249,18 +258,29 @@
       pixelRect(W * x + u * 7, H * y - u, u * 2, u, cloud);
     }
 
-    const horizon = H * .7;
-    pixelRect(0, horizon, W, H * .14, "#7771a5");
-    for (let x = -W * .1; x < W; x += W * .32) {
-      pixelRect(x, horizon - H * .07, W * .2, H * .07, "#7771a5");
-      pixelRect(x + W * .05, horizon - H * .12, W * .1, H * .05, "#7771a5");
-    }
-    pixelRect(0, H * .82, W, H * .18, "#344d58");
-    pixelRect(0, H * .82, W, Math.max(4, H * .012), "#ffe45c");
-    pixelRect(0, H * .91, W, Math.max(3, H * .006), "#283947");
+    const horizon = H * .61;
+    pixelRect(0, horizon, W, H - horizon, "#7771a5");
+    pixelPolygon([[0, H * .75], [W * .5, H * .56], [W, H * .75], [W, H * .84], [W * .5, H * .65], [0, H * .84]], "#344d58");
+    pixelPolygon([[0, H * .745], [W * .5, H * .555], [W, H * .745], [W, H * .758], [W * .5, H * .568], [0, H * .758]], "#ffe45c");
+    pixelPolygon([[0, H * .91], [W * .5, H * .72], [W, H * .91], [W, H * 1.08], [0, H * 1.08]], "#344d58");
+    pixelPolygon([[0, H * .905], [W * .5, H * .715], [W, H * .905], [W, H * .918], [W * .5, H * .728], [0, H * .918]], "#ffe45c");
 
-    const roadY = H * .94;
-    for (let x = 16; x < W; x += 72) pixelRect(x, roadY, 32, 4, "#ffe45c");
+    ctx.strokeStyle = "rgba(255, 228, 92, .3)";
+    ctx.lineWidth = Math.max(2, Math.round(Math.min(W, H) / 320));
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(W * (.5 + i * .12), H * .62);
+      ctx.lineTo(W * (.5 + i * .36), H);
+      ctx.stroke();
+    }
+    for (const y of [.68, .77, .9]) {
+      ctx.beginPath();
+      ctx.moveTo(0, H * y);
+      ctx.lineTo(W, H * y);
+      ctx.stroke();
+    }
+
+    for (let x = 20; x < W; x += 76) pixelRect(x, H * .95, 32, 4, "#ffe45c");
   }
 
   function houseGeometry(star, index, slot, columns) {
@@ -273,7 +293,9 @@
     const height = Math.min(H * (row ? .21 : .17), H * (.105 + (seed * 37 % 7) * .013));
     const x = cell * (col + .5) - width / 2;
     const ground = H * (row ? .82 : .72);
-    return { x, y: ground - height, w: width, h: height, ground, unit: Math.max(3, Math.floor(width / 15)) };
+    const unit = Math.max(3, Math.floor(width / 15));
+    const depth = unit * 3;
+    return { x: x - depth / 2, y: ground - height - depth, w: width, h: height, ground, depth, unit };
   }
 
   function houseLayouts() {
@@ -292,7 +314,7 @@
   }
 
   function drawHouse(star, house) {
-    const { x, y, w, h, ground, unit: u } = house;
+    const { x, y, w, h, ground, depth: d, unit: u } = house;
     const hue = Number(star.hue) || 48;
     const active = star === hovered || star === pinned;
     const outline = "#29213e";
@@ -300,16 +322,21 @@
     const wallColor = hsla(hue, 62, 43, 1);
     const shadeColor = hsla(hue, 58, 32, 1);
 
-    pixelRect(x - u, y + u, w + u * 2, h - u, outline);
-    pixelRect(x, y + u * 4, w, ground - y - u * 4, wallColor);
-    pixelRect(x, y + u * 4, u * 2, ground - y - u * 4, shadeColor);
-    pixelRect(x - u * 2, y + u * 3, w + u * 4, u * 2, outline);
-    pixelRect(x - u, y + u * 2, w + u * 2, u * 2, roofColor);
-    pixelRect(x + u, y + u, w - u * 2, u, roofColor);
-    pixelRect(x + u * 2, y, w - u * 4, u, roofColor);
+    pixelPolygon([[x + u, ground - u], [x + w + u, ground - d - u], [x + w + u, y + d], [x + u, y + d * 2]], "rgba(33, 24, 55, .4)");
+
+    pixelPolygon([[x + w, y + d], [x + w + d, y], [x + w + d, ground - d], [x + w, ground]], outline);
+    pixelPolygon([[x + w, y + d * 1.5], [x + w + d, y + d / 2], [x + w + d, ground - d], [x + w, ground]], shadeColor);
+    pixelRect(x, y + d, w, ground - y - d, outline);
+    pixelRect(x + u, y + d + u, w - u * 2, ground - y - d - u, wallColor);
+    pixelRect(x + u, y + d + u, u * 2, ground - y - d - u, shadeColor);
+
+    pixelPolygon([[x - u, y + d], [x + d, y - u], [x + w + d + u, y - u], [x + w + u, y + d]], outline);
+    pixelPolygon([[x, y + d - u], [x + d, y], [x + w + d, y], [x + w, y + d - u]], roofColor);
+    pixelPolygon([[x + w, y + d - u], [x + w + d, y], [x + w + d, y + u], [x + w, y + d]], shadeColor);
+    pixelPolygon([[x, y + d - u], [x + d, y], [x + d, y + u], [x, y + d]], hsla(hue, 80, 66, 1));
 
     const windowSize = u * 2;
-    const windowY = y + h * .42;
+    const windowY = y + d + h * .42;
     const windows = Math.max(2, Math.floor(w / (u * 4)));
     for (let i = 0; i < windows; i++) {
       const wx = x + u * 2 + i * ((w - u * 4) / windows);
@@ -324,9 +351,7 @@
     pixelRect(x + w * .5 + doorW / 4, ground - doorH * .48, Math.max(1, u / 2), Math.max(1, u / 2), "#fff4a6");
 
     if (active) {
-      pixelRect(x - u * 2, y - u * 2, w + u * 4, u, "#fff3a0");
-      pixelRect(x - u * 2, y + u, u, h - u, "#fff3a0");
-      pixelRect(x + w + u, y + u, u, h - u, "#fff3a0");
+      pixelPolygon([[x - u * 2, y + d], [x + d, y - u * 2], [x + w + d + u * 2, y - u * 2], [x + w + u * 2, y + d]], "#fff3a0");
     }
   }
 
