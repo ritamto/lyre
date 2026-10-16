@@ -87,11 +87,6 @@ function clean(value, max) {
     .slice(0, max);
 }
 
-function toInt(value) {
-  const n = Math.round(Number(value));
-  return Number.isFinite(n) && n >= 0 && n < 600000 ? n : null;
-}
-
 const hits = new Map();
 function rateLimited(key, limit, windowMs) {
   const now = Date.now();
