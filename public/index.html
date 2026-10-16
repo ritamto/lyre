@@ -263,15 +263,12 @@
     for (let x = 16; x < W; x += 72) pixelRect(x, roadY, 32, 4, "#ffe45c");
   }
 
-  function houseGeometry(star, index) {
-    const columns = Math.max(4, Math.min(18, Math.floor(W / 82)));
-    const capacity = columns * 2;
-    const id = Number(star.id);
-    const slot = (Number.isFinite(id) ? Math.abs(Math.trunc(id)) : index) % capacity;
+  function houseGeometry(star, index, slot, columns) {
     const row = Math.floor(slot / columns);
     const col = slot % columns;
     const cell = W / columns;
     const width = cell * .62;
+    const id = Number(star.id);
     const seed = Number.isFinite(id) ? Math.abs(Math.trunc(id)) : index + 1;
     const height = Math.min(H * (row ? .21 : .17), H * (.105 + (seed * 37 % 7) * .013));
     const x = cell * (col + .5) - width / 2;
@@ -279,8 +276,23 @@
     return { x, y: ground - height, w: width, h: height, ground, unit: Math.max(3, Math.floor(width / 15)) };
   }
 
-  function drawHouse(star, index) {
-    const { x, y, w, h, ground, unit: u } = houseGeometry(star, index);
+  function houseLayouts() {
+    const columns = Math.max(4, Math.min(18, Math.floor(W / 82)));
+    const capacity = columns * 2;
+    const occupied = new Set();
+    return stars.slice(0, capacity).map((star, index) => {
+      const sx = Number(star.x), sy = Number(star.y);
+      const col = Number.isFinite(sx) ? Math.max(0, Math.min(columns - 1, Math.floor(sx * columns))) : index % columns;
+      const row = Number.isFinite(sy) ? Number(sy) >= .47 ? 1 : 0 : Math.floor(index / columns) % 2;
+      let slot = row * columns + col;
+      while (occupied.has(slot)) slot = (slot + 1) % capacity;
+      occupied.add(slot);
+      return { star, index, ...houseGeometry(star, index, slot, columns) };
+    });
+  }
+
+  function drawHouse(star, house) {
+    const { x, y, w, h, ground, unit: u } = house;
     const hue = Number(star.hue) || 48;
     const active = star === hovered || star === pinned;
     const outline = "#29213e";
@@ -320,10 +332,9 @@
 
   function frame() {
     drawBackdrop();
-    const columns = Math.max(4, Math.min(18, Math.floor(W / 82)));
-    const houses = stars.slice(0, columns * 2).map((star, index) => ({ star, index }));
-    houses.sort((a, b) => houseGeometry(a.star, a.index).ground - houseGeometry(b.star, b.index).ground);
-    houses.forEach(({ star, index }) => drawHouse(star, index));
+    const houses = houseLayouts();
+    houses.sort((a, b) => a.ground - b.ground);
+    houses.forEach((house) => drawHouse(house.star, house));
     placeTip();
     requestAnimationFrame(frame);
   }
@@ -347,7 +358,8 @@
       tip.replaceChildren(n, m, w); tip.style.setProperty("--h", s.hue);
       tip.style.display = "block"; shownTip = s;
     }
-    const house = houseGeometry(s, stars.indexOf(s));
+    const house = houseLayouts().find((entry) => entry.star === s);
+    if (!house) { tip.style.display = "none"; shownTip = null; return; }
     const x = house.x + house.w / 2, y = house.y;
     const left = x + 22 + tip.offsetWidth > W - 8 ? x - 22 - tip.offsetWidth : x + 22;
     tip.style.left = Math.max(8, left) + "px";
@@ -355,13 +367,11 @@
   }
   function pick(px, py) {
     let best = null, bestDistance = Infinity;
-    const columns = Math.max(4, Math.min(18, Math.floor(W / 82)));
-    stars.slice(0, columns * 2).forEach((s, index) => {
-      const house = houseGeometry(s, index);
+    houseLayouts().forEach((house) => {
       const padding = coarse ? 10 : 2;
       if (px < house.x - padding || px > house.x + house.w + padding || py < house.y - padding || py > house.ground + padding) return;
       const distance = Math.hypot(px - house.x - house.w / 2, py - house.ground);
-      if (distance < bestDistance) { best = s; bestDistance = distance; }
+      if (distance < bestDistance) { best = house.star; bestDistance = distance; }
     });
     return best;
   }
