@@ -1,13 +1,185 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lyre</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/client/main.tsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Website</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: system-ui, sans-serif; }
+  canvas { display: block; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  #ui {
+    position: fixed; top: 20px; left: 24px; color: #fff; pointer-events: none;
+    text-shadow: 0 0 12px rgba(120,160,255,.8);
+  }
+  #ui h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: 6px; font-weight: 300; }
+  #ui p { margin: 0; font-size: 12px; opacity: .65; letter-spacing: 1px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div id="ui">
+  <h1>COSMIC CORE</h1>
+  <p>DRAG to rotate &nbsp;·&nbsp; SCROLL to zoom<br>CLICK for a shockwave &amp; new colors</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ---------- Setup ----------
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000000, 0.035);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 500);
+camera.position.set(0, 4, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// ---------- Galaxy ----------
+const COUNT = 70000, BRANCHES = 5, RADIUS = 9, SPIN = 1.2;
+const positions = new Float32Array(COUNT * 3);
+const colors = new Float32Array(COUNT * 3);
+const radii = new Float32Array(COUNT);
+
+for (let i = 0; i < COUNT; i++) {
+  const r = Math.pow(Math.random(), 1.6) * RADIUS;
+  const branch = ((i % BRANCHES) / BRANCHES) * Math.PI * 2;
+  const angle = branch + r * SPIN;
+  const rnd = () => Math.pow(Math.random(), 3) * (Math.random() < .5 ? 1 : -1) * 0.35 * r * 0.4;
+  positions[i*3]   = Math.cos(angle) * r + rnd();
+  positions[i*3+1] = rnd() * 0.5;
+  positions[i*3+2] = Math.sin(angle) * r + rnd();
+  radii[i] = r / RADIUS;
+}
+
+const galaxyGeo = new THREE.BufferGeometry();
+galaxyGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+galaxyGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+function paint(innerHex, outerHex) {
+  const a = new THREE.Color(innerHex), b = new THREE.Color(outerHex), c = new THREE.Color();
+  for (let i = 0; i < COUNT; i++) {
+    c.copy(a).lerp(b, radii[i]);
+    colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+  }
+  galaxyGeo.attributes.color.needsUpdate = true;
+}
+paint(0xff7a3d, 0x2f5bff);
+
+const galaxy = new THREE.Points(galaxyGeo, new THREE.PointsMaterial({
+  size: 0.03, sizeAttenuation: true, vertexColors: true,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+}));
+
+// ---------- Core ----------
+const core = new THREE.Group();
+const wire = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(1.3, 1),
+  new THREE.MeshBasicMaterial({ color: 0x66ccff, wireframe: true, transparent: true, opacity: 0.8 })
+);
+const inner = new THREE.Mesh(
+  new THREE.SphereGeometry(0.7, 32, 32),
+  new THREE.MeshBasicMaterial({ color: 0xffaa55 })
+);
+const knot = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(2, 0.05, 220, 12, 2, 3),
+  new THREE.MeshBasicMaterial({ color: 0xff44aa, transparent: true, opacity: 0.85 })
+);
+const ring = new THREE.Mesh(
+  new THREE.TorusGeometry(3, 0.015, 8, 200),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 })
+);
+ring.rotation.x = Math.PI / 2.4;
+core.add(wire, inner, knot, ring);
+
+// ---------- Shockwave ring ----------
+const shock = new THREE.Mesh(
+  new THREE.RingGeometry(0.98, 1, 128),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+shock.rotation.x = -Math.PI / 2;
+
+// ---------- Background stars ----------
+const starPos = new Float32Array(4000 * 3);
+for (let i = 0; i < starPos.length; i++) starPos[i] = (Math.random() - 0.5) * 300;
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 0.25, color: 0x8899ff, transparent: true, opacity: 0.7, depthWrite: false }));
+
+const world = new THREE.Group();
+world.add(galaxy, core, shock);
+scene.add(world, stars);
+
+// ---------- Interaction ----------
+let targetX = 0.35, targetY = 0, velY = 0.0015;
+let dragging = false, moved = 0, lastX = 0, lastY = 0, zoom = 12;
+let pulse = 0, shockT = 0;
+const palettes = [
+  [0xff7a3d, 0x2f5bff], [0xffe066, 0xff2e63], [0x00ffd5, 0x7a2fff],
+  [0xffffff, 0x00aaff], [0xff4d4d, 0xffb300], [0x9dff00, 0x00b7ff]
+];
+let pIdx = 0;
+
+const el = renderer.domElement;
+el.addEventListener('pointerdown', e => { dragging = true; moved = 0; lastX = e.clientX; lastY = e.clientY; el.setPointerCapture(e.pointerId); });
+el.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  moved += Math.abs(dx) + Math.abs(dy);
+  targetY += dx * 0.005; velY = dx * 0.0008;
+  targetX = Math.max(-1.3, Math.min(1.3, targetX + dy * 0.004));
+  lastX = e.clientX; lastY = e.clientY;
+});
+el.addEventListener('pointerup', () => {
+  dragging = false;
+  if (moved < 6) {           // it was a click
+    pulse = 1; shockT = 0.001;
+    pIdx = (pIdx + 1) % palettes.length;
+    paint(...palettes[pIdx]);
+    inner.material.color.setHex(palettes[pIdx][0]);
+    wire.material.color.setHex(palettes[pIdx][1]);
+  }
+});
+addEventListener('wheel', e => { zoom = Math.max(4, Math.min(30, zoom + e.deltaY * 0.01)); }, { passive: true });
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ---------- Animate ----------
+const clock = new THREE.Clock();
+(function loop() {
+  requestAnimationFrame(loop);
+  const t = clock.getElapsedTime();
+
+  if (!dragging) { targetY += velY; velY += (0.0015 - velY) * 0.02; }
+  world.rotation.y += (targetY - world.rotation.y) * 0.08;
+  world.rotation.x += (targetX - world.rotation.x) * 0.08;
+
+  galaxy.rotation.y = t * 0.05;
+  wire.rotation.set(t * 0.4, t * 0.6, 0);
+  knot.rotation.set(t * 0.3, t * 0.2, t * 0.5);
+  ring.rotation.z = t * 0.5;
+
+  pulse *= 0.94;
+  const s = 1 + Math.sin(t * 2) * 0.08 + pulse * 0.6;
+  inner.scale.setScalar(s);
+  galaxy.scale.setScalar(1 + pulse * 0.25);
+  galaxy.material.size = 0.03 + pulse * 0.03;
+
+  if (shockT > 0) {
+    shockT += 0.02;
+    shock.scale.setScalar(1 + shockT * 25);
+    shock.material.opacity = Math.max(0, 1 - shockT);
+    if (shockT >= 1) { shockT = 0; shock.material.opacity = 0; }
+  }
+
+  stars.rotation.y = t * 0.005;
+  camera.position.z += (zoom - camera.position.z) * 0.06;
+  camera.position.y = 4 * (camera.position.z / 12);
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
 </html>
