@@ -4,9 +4,9 @@
   "private": true,
   "main": "server.js",
   "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "dependencies": {
-    "express": "^4.21.2",
-    "pg": "^8.13.1"
+    "@supabase/supabase-js": "^2.57.4",
+    "express": "^4.21.2"
   }
 }
