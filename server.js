@@ -72,40 +72,11 @@ async function initDb() {
   throw new Error("database never became reachable");
 }
 
-async function logEvent(kind, detail, durationMs) {
-  try {
-    await pool.query(
-      "insert into cg_events (kind, detail, duration_ms) values ($1, $2, $3)",
-      [kind, detail, durationMs]
-    );
-  } catch (err) {
-    console.error("logEvent failed:", err.message);
-  }
-}
-
-const ready = initDb().then(() => logEvent("boot", `node ${process.version}`, null));
+const ready = initDb();
 ready.catch((err) => {
   console.error("startup failed:", err.message);
   process.exit(1);
 });
-
-// ------------------------------------------------------- suspend detection --
-// A timer that fires every 5s. If it fires much later than expected, the
-// process was frozen (suspended) in between, so we log a "resume" event.
-// If the VM clock stands still while frozen this may stay quiet; the visits
-// table (timed by the database) is the dependable record either way.
-const TICK_MS = 5000;
-const RESUME_THRESHOLD_MS = 20000;
-let lastTick = Date.now();
-setInterval(() => {
-  const now = Date.now();
-  const gap = now - lastTick;
-  lastTick = now;
-  if (gap > RESUME_THRESHOLD_MS) {
-    console.log(`resumed after being frozen for about ${Math.round(gap / 1000)}s`);
-    logEvent("resume", "timers stalled", gap);
-  }
-}, TICK_MS).unref();
 
 // ------------------------------------------------------------------ helpers --
 function clean(value, max) {
@@ -189,19 +160,7 @@ app.post("/api/stars", async (req, res) => {
 });
 
 app.post("/api/visit", async (req, res) => {
-  if (rateLimited(`visit:${req.ip}`, 30, 3600000)) return res.status(429).json({ error: "too many visits" });
-  const device = clean(req.body.device, 60) || "unknown";
-  try {
-    await pool.query(
-      `insert into cg_visits (device, ttfb_ms, api_ms, gap_seconds)
-       values ($1, $2, $3, (select round(extract(epoch from now() - max(created_at)))::int from cg_visits))`,
-      [device, toInt(req.body.ttfbMs), toInt(req.body.apiMs)]
-    );
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: "could not record visit" });
-  }
+  res.status(410).json({ error: "visit tracking is disabled" });
 });
 
 app.get("/api/stats", async (_req, res) => {
