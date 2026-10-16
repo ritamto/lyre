@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#05060d">
-<title>Cosmic Guestbook</title>
+<meta name="theme-color" content="#22183e">
+<title>Pixel Town Guestbook</title>
 <style>
   :root {
-    --bg: #05060d; --ink: #eef0ff; --dim: #8f97c0; --faint: #5d6490;
-    --glass: rgba(12, 15, 38, .62); --glass-2: rgba(255, 255, 255, .05);
-    --line: rgba(160, 175, 255, .16); --line-2: rgba(160, 175, 255, .32);
-    --accent: #8ab4ff; --hue: 210; --warm: #6ee7a8; --cold: #ffb454;
-    --r: 18px;
+    --bg: #21183b; --ink: #fff9d8; --dim: #d8c8f1; --faint: #aa96ce;
+    --glass: rgba(34, 24, 62, .9); --glass-2: rgba(255, 226, 95, .09);
+    --line: rgba(255, 220, 78, .35); --line-2: rgba(255, 229, 108, .72);
+    --accent: #ffe45c; --hue: 48; --warm: #9cf58b; --cold: #ffbf69;
+    --r: 5px;
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink);
-    font: 14px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 14px/1.5 "Trebuchet MS", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
@@ -27,7 +27,7 @@
   .glass {
     background: var(--glass); border: 1px solid var(--line); border-radius: var(--r);
     backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .06);
+    box-shadow: 0 5px 0 rgba(14, 10, 31, .55), inset 0 0 0 1px rgba(255, 239, 152, .08);
   }
 
   /* brand */
@@ -36,21 +36,20 @@
     pointer-events: none; max-width: calc(100vw - 170px);
   }
   #brand h1 {
-    margin: 0; font-size: clamp(20px, 3.2vw, 28px); font-weight: 700; letter-spacing: .14em;
-    background: linear-gradient(90deg, #b9d2ff, #d9acff 55%, #ffbddb);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin: 0; font: 900 clamp(21px, 3.2vw, 30px)/1.15 "Courier New", monospace; letter-spacing: .08em;
+    color: #ffe45c; text-shadow: 3px 3px 0 #bd643d;
   }
   #brand p { margin: 2px 0 0; color: var(--dim); font-size: 13px; }
 
   /* observatory button */
   #obsBtn {
     position: fixed; z-index: 4; right: 18px; top: max(18px, env(safe-area-inset-top));
-    display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px;
+    display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 5px;
     background: var(--glass); border: 1px solid var(--line);
     backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); transition: border-color .2s, transform .2s;
   }
   #obsBtn:hover { border-color: var(--line-2); transform: translateY(-1px); }
-  #obsBtn i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  #obsBtn i { width: 8px; height: 8px; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
   #obsBtn b { font-variant-numeric: tabular-nums; }
 
   /* composer dock */
@@ -62,8 +61,8 @@
   .row { display: flex; gap: 10px; }
   .field { position: relative; flex: 1; min-width: 0; }
   .field input[type=text] {
-    width: 100%; padding: 11px 13px; border-radius: 12px; outline: none;
-    border: 1px solid var(--line); background: rgba(4, 6, 20, .55); transition: border-color .2s, box-shadow .2s;
+    width: 100%; padding: 11px 13px; border-radius: 4px; outline: none;
+    border: 1px solid var(--line); background: rgba(19, 14, 36, .9); transition: border-color .2s, box-shadow .2s;
   }
   .field input::placeholder { color: var(--faint); }
   .field input:focus { border-color: hsl(var(--hue) 90% 70%); box-shadow: 0 0 0 3px hsla(var(--hue), 90%, 65%, .18); }
@@ -71,20 +70,18 @@
   #count { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--faint); pointer-events: none; }
   .tools { display: flex; align-items: center; gap: 12px; }
   #preview {
-    flex: none; width: 34px; height: 34px; border-radius: 50%;
-    background: radial-gradient(circle, #fff 0 14%, hsl(var(--hue) 95% 70%) 30%, hsla(var(--hue), 90%, 60%, 0) 72%);
-    filter: drop-shadow(0 0 8px hsl(var(--hue) 95% 65%));
+    flex: none; width: 28px; height: 28px; border-radius: 4px;
+    background: #ffe45c; border: 4px solid #fff4b0; box-shadow: 4px 4px 0 #bd643d;
   }
   #hue {
-    flex: 1; appearance: none; -webkit-appearance: none; height: 8px; border-radius: 99px; outline-offset: 6px;
+    flex: 1; appearance: none; -webkit-appearance: none; height: 8px; border-radius: 0; outline-offset: 6px;
     background: linear-gradient(90deg, hsl(0 90% 65%), hsl(60 90% 65%), hsl(120 90% 65%), hsl(180 90% 65%), hsl(240 90% 70%), hsl(300 90% 65%), hsl(360 90% 65%));
   }
   #hue::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid hsl(var(--hue) 90% 60%); box-shadow: 0 2px 8px rgba(0,0,0,.5); }
   #hue::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid hsl(var(--hue) 90% 60%); }
   #send {
-    flex: none; padding: 11px 18px; border: 0; border-radius: 12px; font-weight: 650; color: #fff;
-    background: linear-gradient(90deg, hsl(var(--hue) 85% 58%), hsl(calc(var(--hue) + 50) 85% 60%));
-    box-shadow: 0 6px 20px hsla(var(--hue), 90%, 60%, .35); transition: transform .15s, filter .2s;
+    flex: none; padding: 11px 18px; border: 0; border-radius: 4px; font-weight: 800; color: #30213d;
+    background: #ffe45c; box-shadow: 0 4px 0 #bd643d; transition: transform .15s, filter .2s;
   }
   #send:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
   #send:disabled { opacity: .55; cursor: default; }
@@ -92,7 +89,7 @@
   /* toast */
   #toast {
     position: fixed; z-index: 6; left: 50%; top: max(20px, env(safe-area-inset-top)); transform: translate(-50%, -140%);
-    padding: 9px 16px; border-radius: 999px; font-size: 13px; transition: transform .35s cubic-bezier(.2,.9,.3,1.2); pointer-events: none;
+    padding: 9px 16px; border-radius: 4px; font-size: 13px; transition: transform .35s cubic-bezier(.2,.9,.3,1.2); pointer-events: none;
   }
   #toast.show { transform: translate(-50%, 0); }
   #toast.err { border-color: rgba(255, 120, 120, .5); color: #ffb3b3; }
@@ -100,9 +97,9 @@
   /* tooltip */
   #tip {
     position: fixed; z-index: 5; display: none; pointer-events: none; width: max-content; max-width: 260px;
-    padding: 10px 13px; border-radius: 14px; border-left: 3px solid hsl(var(--h, 210) 90% 68%);
-    background: rgba(8, 10, 30, .9); border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: pop .18s ease-out;
+    padding: 10px 13px; border-radius: 4px; border-left: 4px solid hsl(var(--h, 48) 90% 68%);
+    background: #241a42; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    box-shadow: 4px 4px 0 rgba(14, 10, 31, .65); animation: pop .18s ease-out;
   }
   #tip b { display: block; font-size: 13px; }
   #tip div { margin: 2px 0 4px; word-break: break-word; }
@@ -125,13 +122,13 @@
   .btn:hover { background: rgba(255, 255, 255, .1); }
   .btn.spin { opacity: .6; pointer-events: none; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .stat { padding: 11px 6px; text-align: center; border-radius: 14px; background: var(--glass-2); border: 1px solid var(--line); }
+  .stat { padding: 11px 6px; text-align: center; border-radius: 4px; background: var(--glass-2); border: 1px solid var(--line); }
   .stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
   .stat span { font-size: 10.5px; color: var(--dim); text-transform: uppercase; letter-spacing: .09em; }
   h3 { margin: 22px 0 8px; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
   ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   li > * { width: 100%; text-align: left; }
-  .item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 11px; border-radius: 12px; background: var(--glass-2); border: 1px solid transparent; }
+  .item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 11px; border-radius: 4px; background: var(--glass-2); border: 1px solid transparent; }
   button.item:hover { border-color: var(--line-2); }
   .dot { flex: none; width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: var(--c, var(--dim)); box-shadow: 0 0 8px var(--c, transparent); }
   .item div { min-width: 0; }
@@ -150,15 +147,15 @@
 </style>
 </head>
 <body>
-<canvas id="sky" aria-label="Interactive night sky of guestbook stars" role="img"></canvas>
+<canvas id="sky" aria-label="Interactive pixel-art town built from guestbook messages" role="img"></canvas>
 
 <header id="brand">
-  <h1>COSMIC GUESTBOOK</h1>
-  <p>Leave a star. It shines for everyone, on every device.</p>
+  <h1>PIXEL TOWN</h1>
+  <p>Leave a note. Build a little piece of our town.</p>
 </header>
 
 <button id="obsBtn" type="button" aria-expanded="false" aria-controls="drawer">
-  <i></i> Observatory <b id="bCount">0</b>
+  <i></i> Town Hall <b id="bCount">0</b>
 </button>
 
 <form id="dock" class="glass" autocomplete="off">
@@ -173,25 +170,25 @@
   </div>
   <div class="tools">
     <span id="preview" aria-hidden="true"></span>
-    <input id="hue" type="range" min="0" max="360" value="210" aria-label="Star colour">
-    <button id="send" type="submit">Launch ✦</button>
+    <input id="hue" type="range" min="0" max="360" value="48" aria-label="Home accent color">
+    <button id="send" type="submit">Add a home</button>
   </div>
 </form>
 
-<aside id="drawer" class="glass" aria-label="Observatory" aria-hidden="true">
+<aside id="drawer" class="glass" aria-label="Town Hall" aria-hidden="true">
   <div class="dHead">
-    <h2>Observatory</h2>
+    <h2>Town Hall</h2>
     <div><button id="refresh" class="btn" type="button">Refresh</button> <button id="close" class="btn" type="button" aria-label="Close">✕</button></div>
   </div>
   <div class="grid">
-    <div class="stat"><b id="sStars">–</b><span>stars</span></div>
+    <div class="stat"><b id="sStars">–</b><span>messages</span></div>
     <div class="stat"><b id="sVisits">–</b><span>visits</span></div>
     <div class="stat"><b id="sDevices">–</b><span>devices</span></div>
     <div class="stat"><b id="sBoots">–</b><span>boots</span></div>
     <div class="stat"><b id="sResumes">–</b><span>resumes</span></div>
     <div class="stat"><b id="sUptime">–</b><span>uptime</span></div>
   </div>
-  <h3>Latest stars</h3><ul id="latest"></ul>
+  <h3>Latest messages</h3><ul id="latest"></ul>
   <h3>Recent visits</h3><ul id="visits"></ul>
   <h3>Wake log</h3><ul id="events"></ul>
   <p class="note">Nothing here polls, so an open tab never keeps the server awake. Orange means the page or API took over 1.5 s: a cold start.</p>
@@ -204,161 +201,129 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const canvas = $("sky"), ctx = canvas.getContext("2d");
-  const TAU = Math.PI * 2;
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const coarse = matchMedia("(pointer: coarse)").matches;
 
-  let W = 0, H = 0, stars = [], edges = [], bg = [], pulses = [], sparks = [], shooters = [];
-  let mouse = { x: 0, y: 0 }, drift = { x: 0, y: 0 };
-  let hovered = null, pinned = null, shownTip = null, lastShoot = 0;
-
-  const rand = (a, b) => a + Math.random() * (b - a);
+  let W = 0, H = 0, stars = [], hovered = null, pinned = null, shownTip = null;
   const hsla = (h, s, l, a) => `hsla(${h},${s}%,${l}%,${a})`;
-  const starPos = (s) => ({ x: s.x * W + drift.x * 22, y: s.y * H + drift.y * 22 });
 
-  /* ---------- sky setup ---------- */
   function resize() {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     W = innerWidth; H = innerHeight;
     canvas.width = W * dpr; canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const n = Math.min(Math.round((W * H) / 2200), 1200);
-    bg = [];
-    while (bg.length < n) {
-      const x = Math.random(), y = Math.random();
-      const bandDistance = Math.abs(y - (.78 - .48 * x));
-      if (Math.random() > .14 + .76 * Math.exp(-(bandDistance ** 2) / .018)) continue;
-      bg.push({
-        x, y, r: Math.random() < .035 ? rand(.9, 1.3) : rand(.2, .7),
-        alpha: rand(.2, .58), tw: rand(0, TAU), sp: rand(.15, .45),
-        color: Math.random() < .18 ? "218,214,199" : Math.random() < .55 ? "196,210,228" : "225,231,239",
-      });
-    }
+    ctx.imageSmoothingEnabled = false;
   }
 
   function setStars(list) {
     stars = list;
     $("bCount").textContent = stars.length;
-    // constellation lines: connect each star to its nearest neighbour (cached, not per frame)
-    edges = [];
-    if (stars.length > 1 && stars.length <= 400) {
-      const seen = new Set();
-      stars.forEach((a, i) => {
-        let best = -1, bd = 0.28;
-        stars.forEach((b, j) => {
-          if (i === j) return;
-          const d = Math.hypot(a.x - b.x, a.y - b.y);
-          if (d < bd) { bd = d; best = j; }
-        });
-        const key = best > -1 && [i, best].sort().join("-");
-        if (best > -1 && !seen.has(key)) { seen.add(key); edges.push([a, stars[best]]); }
-      });
-    }
     renderLatest();
   }
 
-  /* ---------- drawing ---------- */
-  function drawMilkyWay() {
-    const nx = H * .48, ny = W, length = Math.hypot(nx, ny);
-    const cx = W * .5, cy = H * .54;
-    const g = ctx.createLinearGradient(
-      cx - nx / length * length, cy - ny / length * length,
-      cx + nx / length * length, cy + ny / length * length,
-    );
-    g.addColorStop(0, "rgba(110,128,150,0)");
-    g.addColorStop(.34, "rgba(110,128,150,0)");
-    g.addColorStop(.43, "rgba(110,128,150,.025)");
-    g.addColorStop(.5, "rgba(125,140,158,.065)");
-    g.addColorStop(.57, "rgba(110,128,150,.035)");
-    g.addColorStop(.66, "rgba(110,128,150,0)");
-    g.addColorStop(1, "rgba(110,128,150,0)");
-    ctx.fillStyle = g;
+  function pixelRect(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  }
+
+  function drawBackdrop() {
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#494280");
+    sky.addColorStop(.42, "#d66b91");
+    sky.addColorStop(.72, "#ffb35b");
+    sky.addColorStop(1, "#ffe477");
+    ctx.fillStyle = sky;
     ctx.fillRect(0, 0, W, H);
+
+    const unit = Math.max(4, Math.round(Math.min(W, H) / 125));
+    const sunX = W * .79, sunY = H * .3, sun = unit * 12;
+    pixelRect(sunX - sun / 2, sunY - sun / 2, sun, sun, "#ffe957");
+    pixelRect(sunX - sun / 2 - unit * 2, sunY - sun / 2 + unit * 3, unit * 2, unit * 6, "#ffe957");
+    pixelRect(sunX + sun / 2, sunY - sun / 2 + unit * 3, unit * 2, unit * 6, "#ffe957");
+
+    for (const [x, y, scale] of [[.16, .2, 1], [.53, .34, .7], [.91, .15, .55]]) {
+      const u = unit * scale;
+      const cloud = "#ffe5be";
+      pixelRect(W * x, H * y, u * 8, u * 2, cloud);
+      pixelRect(W * x + u, H * y - u, u * 5, u, cloud);
+      pixelRect(W * x + u * 2, H * y - u * 2, u * 3, u, cloud);
+      pixelRect(W * x + u * 7, H * y - u, u * 2, u, cloud);
+    }
+
+    const horizon = H * .7;
+    pixelRect(0, horizon, W, H * .14, "#7771a5");
+    for (let x = -W * .1; x < W; x += W * .32) {
+      pixelRect(x, horizon - H * .07, W * .2, H * .07, "#7771a5");
+      pixelRect(x + W * .05, horizon - H * .12, W * .1, H * .05, "#7771a5");
+    }
+    pixelRect(0, H * .82, W, H * .18, "#344d58");
+    pixelRect(0, H * .82, W, Math.max(4, H * .012), "#ffe45c");
+    pixelRect(0, H * .91, W, Math.max(3, H * .006), "#283947");
+
+    const roadY = H * .94;
+    for (let x = 16; x < W; x += 72) pixelRect(x, roadY, 32, 4, "#ffe45c");
   }
 
-  function drawStar(s, t) {
-    const { x, y } = starPos(s);
-    const active = s === hovered || s === pinned;
-    const born = s._born == null ? 1 : Math.min((t - s._born) / 1.2, 1);
-    const pulse = 1 + 0.16 * Math.sin(t * 1.5 + s.id) ;
-    const glow = (active ? 54 : 30) * pulse * born;
-    const g = ctx.createRadialGradient(x, y, 0, x, y, glow);
-    g.addColorStop(0, hsla(s.hue, 95, 72, .8)); g.addColorStop(.35, hsla(s.hue, 90, 60, .22)); g.addColorStop(1, hsla(s.hue, 90, 60, 0));
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, glow, 0, TAU); ctx.fill();
-    const len = (active ? 17 : 10) * pulse * born;
-    ctx.strokeStyle = hsla(s.hue, 100, 90, .6); ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x - len, y); ctx.lineTo(x + len, y); ctx.moveTo(x, y - len); ctx.lineTo(x, y + len); ctx.stroke();
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, (active ? 3.4 : 2.3) * born, 0, TAU); ctx.fill();
-    if (pinned === s) {
-      ctx.strokeStyle = hsla(s.hue, 95, 78, .5); ctx.setLineDash([3, 5]);
-      ctx.beginPath(); ctx.arc(x, y, 20 + Math.sin(t * 3) * 1.5, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+  function houseGeometry(star, index) {
+    const columns = Math.max(4, Math.min(18, Math.floor(W / 82)));
+    const capacity = columns * 2;
+    const id = Number(star.id);
+    const slot = (Number.isFinite(id) ? Math.abs(Math.trunc(id)) : index) % capacity;
+    const row = Math.floor(slot / columns);
+    const col = slot % columns;
+    const cell = W / columns;
+    const width = cell * .62;
+    const seed = Number.isFinite(id) ? Math.abs(Math.trunc(id)) : index + 1;
+    const height = Math.min(H * (row ? .21 : .17), H * (.105 + (seed * 37 % 7) * .013));
+    const x = cell * (col + .5) - width / 2;
+    const ground = H * (row ? .82 : .72);
+    return { x, y: ground - height, w: width, h: height, ground, unit: Math.max(3, Math.floor(width / 15)) };
+  }
+
+  function drawHouse(star, index) {
+    const { x, y, w, h, ground, unit: u } = houseGeometry(star, index);
+    const hue = Number(star.hue) || 48;
+    const active = star === hovered || star === pinned;
+    const outline = "#29213e";
+    const roofColor = hsla(hue, 78, 58, 1);
+    const wallColor = hsla(hue, 62, 43, 1);
+    const shadeColor = hsla(hue, 58, 32, 1);
+
+    pixelRect(x - u, y + u, w + u * 2, h - u, outline);
+    pixelRect(x, y + u * 4, w, ground - y - u * 4, wallColor);
+    pixelRect(x, y + u * 4, u * 2, ground - y - u * 4, shadeColor);
+    pixelRect(x - u * 2, y + u * 3, w + u * 4, u * 2, outline);
+    pixelRect(x - u, y + u * 2, w + u * 2, u * 2, roofColor);
+    pixelRect(x + u, y + u, w - u * 2, u, roofColor);
+    pixelRect(x + u * 2, y, w - u * 4, u, roofColor);
+
+    const windowSize = u * 2;
+    const windowY = y + h * .42;
+    const windows = Math.max(2, Math.floor(w / (u * 4)));
+    for (let i = 0; i < windows; i++) {
+      const wx = x + u * 2 + i * ((w - u * 4) / windows);
+      pixelRect(wx - 1, windowY - 1, windowSize + 2, windowSize + 2, outline);
+      pixelRect(wx, windowY, windowSize, windowSize, "#ffe45c");
+      pixelRect(wx + windowSize / 2, windowY, Math.max(1, u / 2), windowSize, "#fff5a8");
+    }
+
+    const doorW = u * 2, doorH = Math.min(h * .34, u * 5);
+    pixelRect(x + w * .5 - doorW / 2 - 1, ground - doorH - 1, doorW + 2, doorH + 1, outline);
+    pixelRect(x + w * .5 - doorW / 2, ground - doorH, doorW, doorH, "#f3ae57");
+    pixelRect(x + w * .5 + doorW / 4, ground - doorH * .48, Math.max(1, u / 2), Math.max(1, u / 2), "#fff4a6");
+
+    if (active) {
+      pixelRect(x - u * 2, y - u * 2, w + u * 4, u, "#fff3a0");
+      pixelRect(x - u * 2, y + u, u, h - u, "#fff3a0");
+      pixelRect(x + w + u, y + u, u, h - u, "#fff3a0");
     }
   }
 
-  function drawEffects(t, dt) {
-    pulses = pulses.filter((p) => t - p.t0 < 1.8);
-    for (const p of pulses) {
-      const age = t - p.t0;
-      ctx.strokeStyle = hsla(p.hue, 95, 75, 1 - age / 1.8); ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(p.x * W + drift.x * 22, p.y * H + drift.y * 22, age * 260, 0, TAU); ctx.stroke();
-    }
-    sparks = sparks.filter((p) => p.life > 0);
-    for (const p of sparks) {
-      p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .97; p.vy *= .97; p.life -= dt;
-      ctx.fillStyle = hsla(p.hue, 95, 78, Math.max(p.life, 0));
-      ctx.beginPath(); ctx.arc(p.x, p.y, 1.6, 0, TAU); ctx.fill();
-    }
-    shooters = shooters.filter((s) => s.life > 0);
-    for (const s of shooters) {
-      s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
-      const a = Math.min(s.life, 1);
-      const g = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * .12, s.y - s.vy * .12);
-      g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(1, "rgba(150,180,255,0)");
-      ctx.strokeStyle = g; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * .12, s.y - s.vy * .12); ctx.stroke();
-    }
-  }
-
-  let prev = 0;
-  function frame(ms) {
-    const t = ms / 1000, dt = Math.min(t - prev, .05); prev = t;
-    const k = reduced ? 0 : 1;
-    drift.x += ((mouse.x + Math.sin(t * .12) * .25 * k) - drift.x) * .04;
-    drift.y += ((mouse.y + Math.cos(t * .09) * .25 * k) - drift.y) * .04;
-
-    ctx.globalCompositeOperation = "source-over";
-    const base = ctx.createRadialGradient(W * .5, H * .55, 0, W * .5, H * .55, Math.max(W, H) * .85);
-    base.addColorStop(0, "#0b0f17"); base.addColorStop(.55, "#070a10"); base.addColorStop(1, "#030407");
-    ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
-
-    drawMilkyWay();
-
-    for (const s of bg) {
-      const x = s.x * W, y = s.y * H;
-      const a = s.alpha * (1 + (reduced ? 0 : .08 * Math.sin(t * s.sp + s.tw)));
-      ctx.fillStyle = `rgba(${s.color},${a})`;
-      ctx.beginPath(); ctx.arc(x, y, s.r, 0, TAU); ctx.fill();
-    }
-
-    if (!reduced && t - lastShoot > rand(18, 35) && !document.hidden) {
-      lastShoot = t;
-      const fromLeft = Math.random() < .5, sp = rand(450, 700), ang = rand(.2, .5);
-      shooters.push({ x: rand(0, W * .8), y: rand(0, H * .4), vx: (fromLeft ? 1 : -1) * sp * Math.cos(ang), vy: sp * Math.sin(ang), life: 1.1 });
-    }
-
-    // constellation lines
-    ctx.lineWidth = 1;
-    for (const [a, b] of edges) {
-      const p = starPos(a), q = starPos(b);
-      const g = ctx.createLinearGradient(p.x, p.y, q.x, q.y);
-      g.addColorStop(0, hsla(a.hue, 90, 75, .16)); g.addColorStop(1, hsla(b.hue, 90, 75, .16));
-      ctx.strokeStyle = g; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
-    }
-
-    for (const s of stars) drawStar(s, t);
-    drawEffects(t, dt);
-
-    ctx.globalCompositeOperation = "source-over";
+  function frame() {
+    drawBackdrop();
+    const columns = Math.max(4, Math.min(18, Math.floor(W / 82)));
+    const houses = stars.slice(0, columns * 2).map((star, index) => ({ star, index }));
+    houses.sort((a, b) => houseGeometry(a.star, a.index).ground - houseGeometry(b.star, b.index).ground);
+    houses.forEach(({ star, index }) => drawHouse(star, index));
     placeTip();
     requestAnimationFrame(frame);
   }
@@ -382,27 +347,30 @@
       tip.replaceChildren(n, m, w); tip.style.setProperty("--h", s.hue);
       tip.style.display = "block"; shownTip = s;
     }
-    const { x, y } = starPos(s);
+    const house = houseGeometry(s, stars.indexOf(s));
+    const x = house.x + house.w / 2, y = house.y;
     const left = x + 22 + tip.offsetWidth > W - 8 ? x - 22 - tip.offsetWidth : x + 22;
     tip.style.left = Math.max(8, left) + "px";
     tip.style.top = Math.max(8, Math.min(y - 20, H - tip.offsetHeight - 8)) + "px";
   }
   function pick(px, py) {
-    let best = null, bd = coarse ? 34 : 24;
-    for (const s of stars) {
-      const p = starPos(s), d = Math.hypot(p.x - px, p.y - py);
-      if (d < bd) { best = s; bd = d; }
-    }
+    let best = null, bestDistance = Infinity;
+    const columns = Math.max(4, Math.min(18, Math.floor(W / 82)));
+    stars.slice(0, columns * 2).forEach((s, index) => {
+      const house = houseGeometry(s, index);
+      const padding = coarse ? 10 : 2;
+      if (px < house.x - padding || px > house.x + house.w + padding || py < house.y - padding || py > house.ground + padding) return;
+      const distance = Math.hypot(px - house.x - house.w / 2, py - house.ground);
+      if (distance < bestDistance) { best = s; bestDistance = distance; }
+    });
     return best;
   }
   function select(s) {
     pinned = s; hovered = s;
-    if (s) pulses.push({ x: s.x, y: s.y, hue: s.hue, t0: prev });
   }
 
   addEventListener("pointermove", (e) => {
     if (e.pointerType !== "mouse") return;
-    mouse.x = (e.clientX / W - .5) * 2; mouse.y = (e.clientY / H - .5) * 2;
     if (e.target !== canvas) { hovered = null; canvas.style.cursor = ""; return; }
     hovered = pick(e.clientX, e.clientY);
     canvas.style.cursor = hovered ? "pointer" : "default";
@@ -470,7 +438,7 @@
       el.addEventListener("click", () => { select(s); setDrawer(false); });
       return li;
     });
-    $("latest").replaceChildren(...(list.length ? list : [empty("The sky is empty. Launch the first star.")]));
+    $("latest").replaceChildren(...(list.length ? list : [empty("The town is quiet. Add the first home.")]));
   }
 
   async function loadStats() {
@@ -515,7 +483,10 @@
   });
 
   /* ---------- composer ---------- */
-  const setHue = () => document.documentElement.style.setProperty("--hue", $("hue").value);
+  const setHue = () => {
+    document.documentElement.style.setProperty("--hue", $("hue").value);
+    $("preview").style.background = `hsl(${$("hue").value} 78% 58%)`;
+  };
   $("hue").addEventListener("input", setHue); setHue();
   $("message").addEventListener("input", () => { $("count").textContent = `${$("message").value.length}/80`; });
 
@@ -523,24 +494,17 @@
     e.preventDefault();
     const message = $("message").value.trim();
     if (!message) return;
-    $("send").disabled = true; $("send").textContent = "Launching…";
+    $("send").disabled = true; $("send").textContent = "Building…";
     try {
       const star = await api("/api/stars", { method: "POST",
         body: JSON.stringify({ name: $("name").value.trim(), message, hue: $("hue").value }) });
-      star._born = prev;
       setStars([star, ...stars]);
-      pulses.push({ x: star.x, y: star.y, hue: star.hue, t0: prev });
-      const p = starPos(star);
-      if (!reduced) for (let i = 0; i < 36; i++) {
-        const a = rand(0, TAU), v = rand(40, 220);
-        sparks.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rand(.5, 1.2), hue: star.hue });
-      }
       select(star);
       $("message").value = ""; $("count").textContent = "0/80";
-      toast("Your star is in the sky ✦");
+      toast("Welcome to the neighborhood!");
       if (statsLoaded) loadStats();
     } catch (err) { toast(err.message, true); }
-    $("send").disabled = false; $("send").textContent = "Launch ✦";
+    $("send").disabled = false; $("send").textContent = "Add a home";
   });
 
   /* ---------- boot: one visit = a few requests, then silence ---------- */
