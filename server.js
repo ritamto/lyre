@@ -171,7 +171,7 @@ app.post("/api/stars", async (req, res) => {
   const hue = Number.isFinite(rawHue) ? Math.max(0, Math.min(360, rawHue)) : Math.floor(Math.random() * 360);
   if (!message) return res.status(400).json({ error: "write something first" });
   if (rateLimited(`star:${req.ip}`, 5, 3600000)) {
-    return res.status(429).json({ error: "slow down: 5 stars an hour per visitor" });
+    return res.status(429).json({ error: "slow down: 5 messages an hour per visitor" });
   }
   const x = 0.07 + Math.random() * 0.86;
   const y = 0.16 + Math.random() * 0.62;
@@ -184,7 +184,7 @@ app.post("/api/stars", async (req, res) => {
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ error: "could not save your star" });
+    res.status(500).json({ error: "could not save your message" });
   }
 });
 
