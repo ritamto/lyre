@@ -2,3 +2,9 @@ node_modules
 .git
 .env
 *.md
+
+# Local agent credentials
+.insta/agent-session.json
+
+# Local: the control plane this machine linked against
+.insta/link-plane.json
