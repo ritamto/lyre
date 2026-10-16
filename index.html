@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lyre - Express Project</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Lyre 🎵</h1>
+        <p>Your Express server is successfully serving static files!</p>
+        
+        <button id="api-btn">Test Backend API</button>
+        <pre id="result">Click the button to test communication with Express.</pre>
+    </div>
+
+    <script>
+        // Simple frontend script to talk to your backend route (/api/health)
+        document.getElementById('api-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').innerText = 'Error connecting to server!';
+            }
+        });
+    </script>
+</body>
+</html>
